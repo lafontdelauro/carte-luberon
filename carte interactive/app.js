@@ -1,7 +1,7 @@
 // Initialiser la carte
 var map = L.map('map', {
     crs: L.CRS.Simple,
-    minZoom: -2,
+    minZoom: 0,
     maxZoom: 4
 });
 
