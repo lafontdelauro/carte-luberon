@@ -1,0 +1,216 @@
+/* ========== LAYOUT GÉNÉRAL ========== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ========== CARTE ========== */
+#map {
+    flex: 1;
+    height: 100vh;
+}
+
+/* ========== PANNEAU LATÉRAL ========== */
+#sidebar {
+    width: 280px;
+    min-width: 280px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease;
+}
+
+#sidebar.sidebar-closed {
+    width: 0;
+    min-width: 0;
+}
+
+#sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 14px;
+    background: #1a237e;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+#sidebar-toggle {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+#sidebar-toggle:hover { background: rgba(255,255,255,0.35); }
+
+#sidebar-body {
+    padding: 14px;
+    overflow-y: auto;
+    flex: 1;
+    white-space: nowrap; /* évite que le contenu déborde pendant la transition */
+}
+
+/* ========== BOUTON RÉOUVERTURE ========== */
+#sidebar-open-btn {
+    display: none; /* caché par défaut, affiché quand sidebar fermé */
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1100;
+    background: #1a237e;
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    align-items: center;
+    justify-content: center;
+}
+#sidebar-open-btn:hover { background: #283593; }
+
+/* ========== CONTRÔLES (repris de l'original) ========== */
+.route-option { margin: 0 0 16px 0; }
+
+.route-option label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: normal;
+}
+
+#routeSelect, #marketSelect {
+    font-size: 14px;
+    padding: 8px 10px;
+    width: 100%;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    background: #f9f9f9;
+    cursor: pointer;
+}
+#routeSelect:focus, #marketSelect:focus {
+    outline: none;
+    border-color: #1a237e;
+}
+
+/* ========== PANNEAUX INFO (repris de l'original) ========== */
+#market-info, #route-info {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.6;
+    margin-top: 10px;
+    display: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-left: 3px solid #1a237e;
+    white-space: normal;
+}
+#market-info { border-left-color: #e65100; }
+#market-info p, #route-info p { margin: 5px 0; }
+#market-info a, #route-info a { color: #0066cc; text-decoration: none; }
+#market-info a:hover, #route-info a:hover { text-decoration: underline; }
+
+/* ========== MARQUEURS ========== */
+.number-label {
+    background: white;
+    border: 1px solid black;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 20px;
+    z-index: 1000;
+}
+
+.village-marker { background: transparent; border: none; }
+
+/* ========== ERREUR IMAGE ========== */
+#image-error {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 2000;
+    max-width: 400px;
+}
+#image-error p { margin: 10px 0; color: #333; font-size: 16px; }
+
+/* ========== LISTE ÉTAPES ITINÉRAIRE ========== */
+.route-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+}
+.route-step:last-child { border-bottom: none; }
+.step-num {
+    background: #1a237e;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+.step-info { flex: 1; }
+.step-name { font-weight: 600; font-size: 13px; color: #222; display: block; }
+.step-desc { font-size: 11px; color: #777; margin-top: 2px; line-height: 1.4; white-space: normal; }
+
+/* ========== LISTE MARCHÉS SIDEBAR ========== */
+.market-item {
+    padding: 7px 0;
+    border-bottom: 1px solid #eee;
+}
+.market-item:last-child { border-bottom: none; }
+.market-name { font-weight: 600; font-size: 13px; color: #222; display: block; }
+.market-time { font-size: 11px; color: #777; margin: 2px 0 3px; }
+.market-item a { font-size: 11px; color: #0066cc; text-decoration: none; }
+.market-item a:hover { text-decoration: underline; }
+.off-map-badge {
+    display: inline-block;
+    background: #fff3e0;
+    color: #e65100;
+    font-size: 10px;
+    font-weight: normal;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+}

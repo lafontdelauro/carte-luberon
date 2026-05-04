@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte Interactive du Luberon</title>
+    <link rel="stylesheet" href="leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <!-- Panneau latéral -->
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <span>🗺️ Luberon</span>
+            <button id="sidebar-toggle" onclick="toggleSidebar()" title="Réduire">✕</button>
+        </div>
+        <div id="sidebar-body">
+            <div class="route-option">
+                <label for="routeSelect">Visite de villages - Itinéraires :</label>
+                <select id="routeSelect" onchange="updateRoute()" aria-label="Sélectionner un itinéraire">
+                    <option value="none">Sélectionner un itinéraire</option>
+                    <option value="route1">Luberon</option>
+                    <option value="route2">Monts de Vaucluse</option>
+                </select>
+            </div>
+            <div class="route-option">
+                <label for="marketSelect">Les marchés du jour :</label>
+                <select id="marketSelect" onchange="updateMarket()" aria-label="Sélectionner un jour de marché">
+                    <option value="none">Sélectionner un jour</option>
+                    <option value="monday">Lundi</option>
+                    <option value="tuesday">Mardi</option>
+                    <option value="wednesday">Mercredi</option>
+                    <option value="thursday">Jeudi</option>
+                    <option value="friday">Vendredi</option>
+                    <option value="saturday">Samedi</option>
+                    <option value="sunday">Dimanche</option>
+                </select>
+            </div>
+            <div id="market-info"></div>
+            <div id="route-info"></div>
+        </div>
+    </div>
+
+    <!-- Bouton pour rouvrir -->
+    <button id="sidebar-open-btn" onclick="toggleSidebar()" title="Ouvrir le menu">☰</button>
+
+    <div id="map"></div>
+
+    <div id="image-error">
+        <p>⚠️ Impossible de charger carte_luberon.jpg</p>
+        <p>Vérifiez que le fichier image se trouve dans le même dossier.</p>
+    </div>
+
+    <script src="leaflet.js"></script>
+    <script src="leaflet.polylineDecorator.min.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var openBtn  = document.getElementById('sidebar-open-btn');
+            if (sidebar.classList.contains('sidebar-closed')) {
+                sidebar.classList.remove('sidebar-closed');
+                openBtn.style.display = 'none';
+            } else {
+                sidebar.classList.add('sidebar-closed');
+                openBtn.style.display = 'flex';
+            }
+            setTimeout(function() { map.invalidateSize(); }, 310);
+        }
+    </script>
+</body>
+</html>
