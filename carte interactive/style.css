@@ -63,7 +63,7 @@ body {
     padding: 14px;
     overflow-y: auto;
     flex: 1;
-    white-space: nowrap; /* évite que le contenu déborde pendant la transition */
+    white-space: normal; /* CORRIGÉ : autorise le retour à la ligne pour éviter les débordements */
 }
 
 /* ========== BOUTON RÉOUVERTURE ========== */
@@ -215,20 +215,22 @@ body {
     vertical-align: middle;
 }
 
-/* ========== STYLE BOUTONS TÉLÉCHARGEMENT (AJOUTÉ) ========== */
-.download-btn {
+/* ========== STYLE BOUTONS TÉLÉCHARGEMENT (CORRIGÉ) ========== */
+.download-btn, a.download-btn, a.download-btn:visited {
     display: block;
+    width: 100%;             /* CORRIGÉ : Prend toute la largeur disponible */
     margin-top: 8px;
-    padding: 8px 12px;
-    background: #2d6a4f; /* Joli vert éco/nature */
-    color: white !important;
+    padding: 10px 12px;
+    background: #2d6a4f;     /* Joli vert éco/nature */
+    color: #ffffff !important; /* CORRIGÉ : Force la couleur blanche sur tous les états du lien */
     border-radius: 6px;
     text-decoration: none;
     font-size: 13px;
     text-align: center;
     font-weight: 500;
-    white-space: normal; /* Permet au texte de s'adapter si la sidebar rétrécit */
+    white-space: normal;     /* CORRIGÉ : Autorise le texte à aller à la ligne */
 }
 .download-btn:hover {
     background: #1b4332;
+    color: #ffffff !important;
 }
