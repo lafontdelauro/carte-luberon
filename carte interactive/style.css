@@ -214,3 +214,21 @@ body {
     margin-left: 4px;
     vertical-align: middle;
 }
+
+/* ========== STYLE BOUTONS TÉLÉCHARGEMENT (AJOUTÉ) ========== */
+.download-btn {
+    display: block;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #2d6a4f; /* Joli vert éco/nature */
+    color: white !important;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 500;
+    white-space: normal; /* Permet au texte de s'adapter si la sidebar rétrécit */
+}
+.download-btn:hover {
+    background: #1b4332;
+}
