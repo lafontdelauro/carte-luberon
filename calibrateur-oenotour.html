@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calibrateur — Carte œnotourisme</title>
+<script src="data-oenotour.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Segoe UI",Arial,sans-serif; background:#16161e; color:#eee; }
+  header { padding:10px 16px; background:#26262f; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; white-space:nowrap; }
+  #status { font-size:13px; color:#cfd2dc; flex:1; min-width:200px; }
+  #count { font-weight:700; color:#ffd24d; white-space:nowrap; }
+  #wrap { display:flex; height:calc(100vh - 52px); }
+  #panel { width:300px; min-width:300px; background:#1f1f28; padding:12px; overflow-y:auto; }
+  .btn { display:block; width:100%; padding:9px; margin:6px 0; border:0; border-radius:8px; background:#3a3a48; color:#fff; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn:hover { background:#474756; }
+  .btn-primary { background:#7a3b5e; }
+  .btn-primary:hover { background:#8f4a70; }
+  .btn-go { background:#1e7d46; }
+  .btn-go:hover { background:#259456; }
+  #grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:10px 0; }
+  .n { padding:9px 0; border:0; border-radius:8px; background:#34343f; color:#ddd; font-weight:700; font-size:13px; cursor:pointer; }
+  .n.done { background:#1e5c39; }
+  .n.target { background:#5a3a7a; outline:3px solid #ffd24d; }
+  .n.hotel { grid-column:span 4; }
+  .section { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#8b8f9c; margin:14px 0 4px; }
+  #zoombtns { display:flex; gap:6px; flex-wrap:wrap; }
+  #zoombtns button { padding:6px 10px; border:0; border-radius:6px; background:#34343f; color:#ddd; font-size:12px; cursor:pointer; }
+  #zoombtns button.on { background:#5a3a7a; color:#fff; }
+  #out { width:100%; height:120px; margin-top:8px; background:#111; color:#9fe8b8; font:11px Consolas,monospace; border:1px solid #444; border-radius:6px; padding:6px; }
+  #maparea { flex:1; overflow:auto; padding:12px; background:#101016; }
+  #stage { position:relative; display:inline-block; line-height:0; }
+  #stage img { display:block; user-select:none; -webkit-user-drag:none; cursor:crosshair; }
+  #markers { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; }
+  .pt { position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%;
+        background:#ff4d6d; border:3px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,.7);
+        display:flex; align-items:center; justify-content:center; font:bold 12px/1 Arial; color:#fff; }
+  .pt.hotel { background:#ffd24d; color:#114d5f; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🍷 Calibrateur</h1>
+  <span id="status">Clique sur un numéro à gauche, puis sur le repère correspondant sur la carte.</span>
+  <span id="count"></span>
+</header>
+<div id="wrap">
+  <div id="panel">
+    <div class="section">Cible à placer</div>
+    <a class="btn" id="undo" href="javascript:void(0)">↩️ Annuler le dernier</a>
+    <a class="btn" id="reset" href="javascript:void(0)">🗑️ Tout réinitialiser</a>
+
+    <div class="section">Repères à placer (clic = choisir la cible)</div>
+    <div id="grid"></div>
+
+    <div class="section">Zoom</div>
+    <div id="zoombtns">
+      <button data-z="0.25">25%</button>
+      <button data-z="0.5" class="on">50%</button>
+      <button data-z="1">100%</button>
+      <button data-z="1.5">150%</button>
+      <button data-z="2">200%</button>
+    </div>
+
+    <div class="section">Terminé ?</div>
+    <button class="btn btn-go" id="copyBtn">📋 Générer le code à coller</button>
+    <button class="btn" id="dlBtn">⬇️ Télécharger data-oenotour-coords.js</button>
+    <textarea id="out" readonly placeholder="Le code JS apparaîtra ici → à coller dans la discussion."></textarea>
+  </div>
+
+  <div id="maparea">
+    <div id="stage">
+      <img id="mapimg" src="carte-oenotour.jpg" alt="carte oenotour">
+      <div id="markers"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ------------------------------------------------------------------
+var W = 5512, H = 2520;                       // dimensions natives de carte-oenotour.jpg
+var LS_KEY = "oenoCalib";
+var coords = {};                              // { "1": [x,y], ..., "hotel": [x,y] }
+var undoStack = [];
+var target = null;                            // "1".."59" ou "hotel"
+var nameOf = {};
+OENO_DATA.forEach(function(p){ nameOf[String(p.num)] = p.name; });
+nameOf["hotel"] = "HÔTEL (juste sous le point 38)";
+var ALL_KEYS = OENO_DATA.map(function(p){ return String(p.num); }).concat(["hotel"]);
+var TOTAL = ALL_KEYS.length;
+
+// rechargement si la session a été interrompue
+try { var s = localStorage.getItem(LS_KEY); if (s) coords = JSON.parse(s); } catch(e){}
+
+var img = document.getElementById("mapimg");
+var statusEl = document.getElementById("status");
+var countEl = document.getElementById("count");
+var gridEl = document.getElementById("grid");
+var markersEl = document.getElementById("markers");
+
+// ---------- grille des cibles ----------
+ALL_KEYS.forEach(function(k){
+  var b = document.createElement("button");
+  b.className = "n" + (k === "hotel" ? " hotel" : "");
+  b.textContent = (k === "hotel" ? "🏨 Hôtel" : k);
+  b.title = nameOf[k];
+  b.onclick = function(){ target = k; render(); };
+  b.id = "cell-" + k;
+  gridEl.appendChild(b);
+});
+
+// ---------- zoom ----------
+var zoom = 0.5;
+function applyZoom(){
+  img.style.width = Math.round(W * zoom) + "px";
+  var btns = document.querySelectorAll("#zoombtns button");
+  btns.forEach(function(bt){ bt.classList.toggle("on", parseFloat(bt.dataset.z) === zoom); });
+}
+document.querySelectorAll("#zoombtns button").forEach(function(bt){
+  bt.onclick = function(){ zoom = parseFloat(bt.dataset.z); applyZoom(); };
+});
+applyZoom();
+
+// ---------- enregistrement d'un point ----------
+document.getElementById("stage").addEventListener("click", function(e){
+  if (e.target.tagName === "BUTTON") return;
+  if (!target){
+    statusEl.innerHTML = "⚠️ Choisis d'abord un numéro (ou 🏨) dans la liste de gauche.";
+    return;
+  }
+  var r = img.getBoundingClientRect();
+  var x = Math.round((e.clientX - r.left) / r.width * W);
+  var y = Math.round((e.clientY - r.top) / r.height * H);
+  x = Math.max(0, Math.min(W, x));
+  y = Math.max(0, Math.min(H, y));
+  if (!coords[target]) undoStack.push(target);
+  coords[target] = [x, y];
+  // auto-progression vers le suivant manquant
+  target = nextMissing();
+  save(); render();
+});
+document.getElementById("undo").onclick = function(){
+  var k = undoStack.pop();
+  if (!k) k = ALL_KEYS.slice().reverse().find(function(key){ return coords[key]; });
+  if (k){ delete coords[k]; target = k; save(); render(); }
+};
+document.getElementById("reset").onclick = function(){
+  if (confirm("Tout effacer et repartir de zéro ?")){
+    coords = {}; undoStack = []; target = null; save(); render();
+  }
+};
+
+function nextMissing(){
+  for (var i=0;i<ALL_KEYS.length;i++){ if(!coords[ALL_KEYS[i]]) return ALL_KEYS[i]; }
+  return null;
+}
+function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(coords)); } catch(e){} }
+
+// ---------- rendu ----------
+function render(){
+  var doneCount = 0;
+  ALL_KEYS.forEach(function(k){
+    var cell = document.getElementById("cell-" + k);
+    var isDone = !!coords[k];
+    if (isDone) doneCount++;
+    cell.className = "n" + (k === "hotel" ? " hotel" : "") + (isDone ? " done" : "") + (target === k ? " target" : "");
+  });
+  countEl.textContent = doneCount + "/" + TOTAL + " placés";
+
+  if (target === null){
+    statusEl.innerHTML = "🎉 Tous les points sont placés ! Génère le code à gauche et colle-le ici.";
+  } else {
+    statusEl.innerHTML = "📍 Place le point <b>" + target + " — " + nameOf[target] +
+      "</b> : clique sur son repère sur la carte.";
+  }
+
+  var html = "";
+  ALL_KEYS.forEach(function(k){
+    if (!coords[k]) return;
+    var pct = "left:" + (coords[k][0]/W*100) + "%;top:" + (coords[k][1]/H*100) + "%;";
+    html += '<div class="pt' + (k === "hotel" ? " hotel" : "") + '" style="' + pct + '">' +
+            (k === "hotel" ? "H" : k) + "</div>";
+  });
+  markersEl.innerHTML = html;
+}
+
+// ---------- export ----------
+function buildCode(){
+  var missing = ALL_KEYS.filter(function(k){ return !coords[k]; });
+  var lines = [
+    "// data-oenotour-coords.js",
+    "// Coordonnées en pixels sur carte-oenotour.jpg (" + W + " x " + H + ")",
+    "var OENO_COORDS = {"
+  ];
+  if (missing.length) lines.unshift("/* ⚠️ POINTS MANQUANTS : " + missing.join(", ") + " */");
+  // tri propre : 1..59 puis hotel
+  var ordered = ALL_KEYS.slice().sort(function(a,b){
+    if (a === "hotel") return 1; if (b === "hotel") return -1;
+    return parseInt(a) - parseInt(b);
+  });
+  ordered.forEach(function(k){
+    if (!coords[k]) return;
+    lines.push('  "' + k + '": [' + coords[k][0] + ", " + coords[k][1] + "]");
+  });
+  lines.push("};");
+  return lines.join("\n");
+}
+document.getElementById("copyBtn").onclick = function(){
+  var ta = document.getElementById("out");
+  ta.value = buildCode();
+  ta.focus(); ta.select();
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).catch(function(){});
+  }
+  var missing = ALL_KEYS.filter(function(k){ return !coords[k]; });
+  statusEl.innerHTML = missing.length
+    ? "⚠️ Il manque encore : <b>" + missing.join(", ") + "</b>"
+    : "✅ Code prêt, il est sélectionné → CTRL+C puis colle-le ici !";
+};
+document.getElementById("dlBtn").onclick = function(){
+  var blob = new Blob([buildCode()], {type:"text/javascript"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "data-oenotour-coords.js";
+  a.click();
+};
+
+// cible initiale : premier point non placé (défaut : 1)
+target = nextMissing();
+render();
+</script>
+</body>
+</html>

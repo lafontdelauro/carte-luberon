@@ -1,0 +1,379 @@
+/* ========== LAYOUT GÉNÉRAL ========== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ========== CARTE ========== */
+#map, #map-oeno {
+    flex: 1;
+    height: 100vh;
+}
+
+/* ========== PANNEAU LATÉRAL ========== */
+#sidebar {
+    width: 280px;
+    min-width: 280px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease;
+}
+
+#sidebar.sidebar-closed {
+    width: 0;
+    min-width: 0;
+}
+
+#sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 14px;
+    background: #1a237e;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+#sidebar-toggle {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+#sidebar-toggle:hover { background: rgba(255,255,255,0.35); }
+
+#sidebar-body {
+    padding: 14px;
+    overflow-y: auto;
+    flex: 1;
+    white-space: normal; /* CHANGEMENT 1 : normal au lieu de nowrap */
+}
+
+/* ========== BOUTON RÉOUVERTURE ========== */
+#sidebar-open-btn {
+    display: none; /* caché par défaut, affiché quand sidebar fermé */
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1100;
+    background: #1a237e;
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    align-items: center;
+    justify-content: center;
+}
+#sidebar-open-btn:hover { background: #283593; }
+
+/* ========== CONTRÔLES (repris de l'original) ========== */
+.route-option { margin: 0 0 16px 0; }
+
+.route-option label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: normal;
+}
+
+#mapSelect, #routeSelect, #marketSelect {
+    font-size: 14px;
+    padding: 8px 10px;
+    width: 100%;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    background: #f9f9f9;
+    cursor: pointer;
+}
+#mapSelect:focus, #routeSelect:focus, #marketSelect:focus {
+    outline: none;
+    border-color: #1a237e;
+}
+
+/* ========== PANNEAUX INFO (repris de l'original) ========== */
+#market-info, #route-info {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.6;
+    margin-top: 10px;
+    display: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-left: 3px solid #1a237e;
+    white-space: normal;
+}
+#market-info { border-left-color: #e65100; }
+#market-info p, #route-info p { margin: 5px 0; }
+#market-info a, #route-info a { color: #0066cc; text-decoration: none; }
+#market-info a:hover, #route-info a:hover { text-decoration: underline; }
+
+/* ========== MARQUEURS ========== */
+.number-label {
+    background: white;
+    border: 1px solid black;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 20px;
+    z-index: 1000;
+}
+
+.village-marker { background: transparent; border: none; }
+
+/* ========== ERREUR IMAGE ========== */
+#image-error {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 2000;
+    max-width: 400px;
+}
+#image-error p { margin: 10px 0; color: #333; font-size: 16px; }
+
+/* ========== LISTE ÉTAPES ITINÉRAIRE ========== */
+.route-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+}
+.route-step:last-child { border-bottom: none; }
+.step-num {
+    background: #1a237e;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+.step-info { flex: 1; }
+.step-name { font-weight: 600; font-size: 13px; color: #222; display: block; }
+.step-desc { font-size: 11px; color: #777; margin-top: 2px; line-height: 1.4; white-space: normal; }
+
+/* ========== LISTE MARCHÉS SIDEBAR ========== */
+.market-item {
+    padding: 7px 0;
+    border-bottom: 1px solid #eee;
+}
+.market-item:last-child { border-bottom: none; }
+.market-name { font-weight: 600; font-size: 13px; color: #222; display: block; }
+.market-time { font-size: 11px; color: #777; margin: 2px 0 3px; }
+.market-item a { font-size: 11px; color: #0066cc; text-decoration: none; }
+.market-item a:hover { text-decoration: underline; }
+.off-map-badge {
+    display: inline-block;
+    background: #fff3e0;
+    color: #e65100;
+    font-size: 10px;
+    font-weight: normal;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* ========== CHANGEMENT 2 : BLOC COMPLET MODIFIÉ POUR LES BOUTONS ========== */
+.download-btn {
+    display: block !important;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #2d6a4f !important;
+    color: white !important;
+    border-radius: 6px;
+    text-decoration: none !important;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 500;
+    white-space: normal !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+.download-btn:hover {
+    background: #1b4332 !important;
+    color: white !important;
+}
+
+/* ========== RESPONSIVE MOBILE ========== */
+/* ========== Ligne d'itinéraire "défilée" (pointillés animés) ========== */
+.route-flow {
+    stroke-linecap: round;
+    animation: routeFlow 0.6s linear infinite;
+}
+@keyframes routeFlow {
+    from { stroke-dashoffset: 8; }
+    to   { stroke-dashoffset: 0; }
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 300px;
+        min-width: 300px;
+        transform: translateX(0);
+        box-shadow: 4px 0 16px rgba(0,0,0,0.35);
+    }
+    #sidebar.sidebar-closed {
+        width: 300px;
+        min-width: 300px;
+        transform: translateX(-100%);
+        box-shadow: none;
+    }
+}
+
+/* ============================================================ */
+/* ========== CARTE ŒNOTOURISME : marqueurs & popups ========== */
+/* ============================================================ */
+.oeno-marker { background: transparent; border: none; }
+.oeno-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.oeno-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #7a2038;
+    color: #fff;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3px;
+}
+.oeno-name {
+    background: rgba(255,255,255,0.92);
+    color: #7a2038;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 8px;
+    border: 1px solid #7a2038;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+
+/* --- Popup d'un point œno --- */
+.oeno-pop { min-width: 190px; max-width: 250px; }
+.oeno-pop-head {
+    font-size: 11px;
+    color: #7a2038;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+.oeno-pop-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #7a2038;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+.oeno-pop-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a237e;
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+.oeno-pop-row { font-size: 12px; color: #333; margin: 3px 0; }
+.oeno-pop-link {
+    display: block;
+    font-size: 12px;
+    color: #0066cc;
+    text-decoration: none;
+    margin-top: 5px;
+}
+.oeno-pop-link:hover { text-decoration: underline; }
+
+/* --- Liste sidebar des 59 adresses --- */
+.oeno-group {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #7a2038;
+    margin: 14px 0 4px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 3px;
+}
+.oeno-li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    border-bottom: 1px solid #f4f4f4;
+    text-decoration: none;
+    color: #222;
+    border-radius: 4px;
+}
+.oeno-li:hover { background: #fbeef2; }
+.oeno-li-num {
+    min-width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f3e3e9;
+    color: #7a2038;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.oeno-li-name { font-size: 12px; line-height: 1.3; }
+.oeno-none { font-size: 12px; color: #888; padding: 8px 0; }
